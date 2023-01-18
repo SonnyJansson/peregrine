@@ -31,7 +31,6 @@ int main() {
     usleep(270000);
     subA_logger->warning("I am not doing so well!");
     usleep(130000);
-    printer.reset();
     subA_logger->error("Oops! Crashing!");
     subB_logger->info("Uh oh...");
     main_logger->critical("Oops, also dying now! RIP!");

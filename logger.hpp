@@ -106,7 +106,7 @@ namespace sinks {
 
 using std::string;
 
-class PrintSink: public logging::Sink {
+class PrintSink: public Sink {
 private:
     bool with_color;
 public:
