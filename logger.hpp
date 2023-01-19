@@ -91,8 +91,7 @@ private:
     string name;
 
     std::map<string, Logger> children;
-    std::set<std::weak_ptr<Sink>, std::owner_less<>> sinks;
-    // std::vector<std::weak_ptr<Sink>> sinks;
+    std::vector<std::weak_ptr<Sink>> sinks;
 
     void publish_log(Log log);
     void ensure_child(string logger_name);

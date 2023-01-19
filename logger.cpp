@@ -74,35 +74,48 @@ Logger::Logger(Logger *parent, string name, bool propagate) {
 }
 
 void Logger::publish_log(Log log) {
-    // std::vector<std::weak_ptr<Sink>>::iterator iter;
-    // for(iter = sinks.begin(); iter != sinks.end(); ) {
-    //     if(auto sink_ptr = (*iter).lock()) {
-    //         sink_ptr->handle(log);
-    //         ++iter;
-    //     } else {
-    //         iter = sinks.erase(iter);
-    //     }
-    // }
-
-    for(std::weak_ptr<Sink> weak_ptr : sinks) {
-        if(auto sink_ptr = weak_ptr.lock()) {
+    std::vector<std::weak_ptr<Sink>>::iterator iter;
+    for(iter = sinks.begin(); iter != sinks.end(); ) {
+        if(auto sink_ptr = (*iter).lock()) {
             sink_ptr->handle(log);
+            ++iter;
         } else {
-            sinks.erase(weak_ptr);
+            iter = sinks.erase(iter);
         }
     }
 
-    if(parent and propagate) {
-        parent->publish_log(log);
-    }
+    // for(std::weak_ptr<Sink> weak_ptr : sinks) {
+    //     if(auto sink_ptr = weak_ptr.lock()) {
+    //         sink_ptr->handle(log);
+    //     } else {
+    //         sinks.erase(weak_ptr);
+    //     }
+    // }
+
+    // if(parent and propagate) {
+    //     parent->publish_log(log);
+    // }
+}
+
+template <typename T, typename U>
+inline bool equals(const std::weak_ptr<T> &t, const std::weak_ptr<U> &u) {
+    return !(t.owner_before(u) || u.owner_before(t));
 }
 
 void Logger::attach_sink(std::weak_ptr<Sink> sink) {
-    sinks.insert(sink);
+    sinks.push_back(sink);
+    for(auto& [child_name, child] : children) {
+        child.attach_sink(sink);
+    }
 }
 
 void Logger::deattach_sink(std::weak_ptr<Sink> sink) {
-    sinks.erase(sink);
+    sinks.erase(
+        std::remove_if(sinks.begin(), sinks.end(), [&sink](auto s) { return equals(sink, s); })
+    );
+    for(auto& [child_name, child] : children) {
+        child.deattach_sink(sink);
+    }
 }
 
 void Logger::ensure_child(string logger_name) {
@@ -160,10 +173,10 @@ FileSink::~FileSink() {
 }
 
 void FileSink::handle(logging::Log log) {
-    file_stream << std::setw(9) << std::setprecision(5) << std::fixed << log.time << " ";
+    file_stream << std::setw(12) << std::setprecision(8) << std::fixed << log.time << " ";
     file_stream << "[" << LogLevel_toStr(log.level) << "] ";
     file_stream << log.message << " ";
-    file_stream << "(" << log.source.substr(1) << ")" << std::endl;
+    file_stream << "(" << log.source.substr(1) << ")\n"; // << std::endl;
 }
 
 using nlohmann::json;
