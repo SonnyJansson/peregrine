@@ -68,9 +68,6 @@ Logger::Logger(Logger *parent, string name, bool propagate) {
     this->parent = parent; // If parent is a null pointer, it is the root logger
     this->name = name;
     this->propagate = propagate;
-
-    // self.children = {}
-    // self.sinks = WeakSet()
 }
 
 void Logger::publish_log(Log log) {
@@ -83,18 +80,6 @@ void Logger::publish_log(Log log) {
             iter = sinks.erase(iter);
         }
     }
-
-    // for(std::weak_ptr<Sink> weak_ptr : sinks) {
-    //     if(auto sink_ptr = weak_ptr.lock()) {
-    //         sink_ptr->handle(log);
-    //     } else {
-    //         sinks.erase(weak_ptr);
-    //     }
-    // }
-
-    // if(parent and propagate) {
-    //     parent->publish_log(log);
-    // }
 }
 
 template <typename T, typename U>
