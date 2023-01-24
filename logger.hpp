@@ -49,7 +49,22 @@ NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Log, source, time, level, message);
 
 class Logger;
 
-class Sink : public std::enable_shared_from_this<Sink> {
+class Filter {
+public:
+    virtual bool filter(Log log) {}
+};
+
+class Filterer {
+public:
+    void add_filter(std::shared_ptr<Filter>);
+    void remove_filter(std::shared_ptr<Filter>);
+    void clear_filters();
+protected:
+    bool filter(Log log);
+    std::vector<std::shared_ptr<Filter>> filters;
+};
+
+class Sink : public Filterer, public std::enable_shared_from_this<Sink> {
 public:
     Sink() {}
 
@@ -68,7 +83,7 @@ private:
     // std::shared_ptr<Sink> access_ptr{this};
 };
 
-class Logger {
+class Logger: public Filterer {
 public:
     Logger(Logger *parent, string name, bool propagate = true);
 

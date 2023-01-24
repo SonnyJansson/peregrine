@@ -48,6 +48,29 @@ Log::Log(string source, double time, LogLevel level, string message) {
     this->message = message;
 }
 
+void Filterer::add_filter(std::shared_ptr<Filter> filter) {
+    filters.push_back(filter);
+}
+
+void Filterer::remove_filter(std::shared_ptr<Filter> filter) {
+    filters.erase(
+                  // std::remove_if(filters.begin(), filters.end(), [&filter](auto f) { return equals(filter, f); })
+                  std::remove(filters.begin(), filters.end(), filter)
+    );
+}
+
+void Filterer::clear_filters() {
+}
+
+bool Filterer::filter(Log log) {
+    for(const auto& f : filters) {
+        if(!f->filter(log)) {
+            return false;
+        }
+    }
+    return true;
+}
+
 void Sink::subscribe(Logger *logger) {
     logger->attach_sink(weak_from_this());
 }
@@ -142,6 +165,9 @@ PrintSink::PrintSink(bool with_color) {
 }
 
 void PrintSink::handle(logging::Log log) {
+    if(!filter(log)) {
+        return;
+    }
     std::cout << std::setw(9) << std::setprecision(5) << std::fixed << log.time << " ";
     std::cout << "[" << LogLevel_toStr(log.level, with_color = this->with_color) << "] ";
     std::cout << log.message << " ";

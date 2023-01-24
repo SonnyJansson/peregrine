@@ -5,6 +5,17 @@
 
 using namespace logging::sinks;
 
+class LevelFilter : public logging::Filter {
+public:
+    LevelFilter(logging::LogLevel min_level): min_level(min_level) {}
+
+    bool filter(logging::Log log) override {
+        return log.level >= min_level;
+    }
+private:
+    logging::LogLevel min_level;
+};
+
 int main() {
     auto main_logger = logging::get("main");
     auto subA_logger = main_logger->get("subA");
@@ -12,6 +23,9 @@ int main() {
 
     auto printer = std::make_shared<PrintSink>();
     printer->subscribe(main_logger);
+
+    auto printer_filter = std::make_shared<LevelFilter>(logging::LogLevel::WARNING);
+    printer->add_filter(printer_filter);
 
     // auto file_printer = std::make_shared<FileSink>("out.txt");
     // file_printer->subscribe(main_logger);
@@ -31,6 +45,7 @@ int main() {
     usleep(270000);
     subA_logger->warning("I am not doing so well!");
     usleep(130000);
+    printer->remove_filter(printer_filter);
     subA_logger->error("Oops! Crashing!");
     subB_logger->info("Uh oh...");
     main_logger->critical("Oops, also dying now! RIP!");
