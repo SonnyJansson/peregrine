@@ -106,6 +106,7 @@ private:
     string name;
 
     std::map<string, Logger> children;
+
     std::vector<std::weak_ptr<Sink>> sinks;
 
     void publish_log(Log log);

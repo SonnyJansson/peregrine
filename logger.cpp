@@ -53,10 +53,7 @@ void Filterer::add_filter(std::shared_ptr<Filter> filter) {
 }
 
 void Filterer::remove_filter(std::shared_ptr<Filter> filter) {
-    filters.erase(
-                  // std::remove_if(filters.begin(), filters.end(), [&filter](auto f) { return equals(filter, f); })
-                  std::remove(filters.begin(), filters.end(), filter)
-    );
+    filters.erase(std::remove(filters.begin(), filters.end(), filter));
 }
 
 void Filterer::clear_filters() {
@@ -129,6 +126,21 @@ void Logger::deattach_sink(std::weak_ptr<Sink> sink) {
 void Logger::ensure_child(string logger_name) {
     if(children.find(logger_name) == children.end()) {
         children.try_emplace(logger_name, this, name + "/" + logger_name);
+    }
+}
+
+// We override the add and remove filter methods so that it propagates to children
+void Logger::add_filter(std::shared_ptr<Filter> filter) {
+    filters.push_back(filter);
+    for(auto& [child_name, child] : children) {
+        child.add_filter(filter);
+    }
+}
+
+void Logger::remove_filter(std::shared_ptr<Filter> filter) {
+    filters.erase(std::remove(filters.begin(), filters.end(), filter));
+    for(auto& [child_name, child] : children) {
+        child.remove_filter(filter);
     }
 }
 
