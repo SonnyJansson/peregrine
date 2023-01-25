@@ -53,7 +53,7 @@ void Filterer::add_filter(std::shared_ptr<Filter> filter) {
 }
 
 void Filterer::remove_filter(std::shared_ptr<Filter> filter) {
-    filters.erase(std::remove(filters.begin(), filters.end(), filter));
+    filters.erase(std::remove(filters.begin(), filters.end(), filter), filters.end());
 }
 
 void Filterer::clear_filters() {
@@ -69,7 +69,7 @@ bool Filterer::filter(Log log) {
 }
 
 void Sink::subscribe(Logger *logger) {
-    logger->attach_sink(weak_from_this());
+    logger->add_sink(weak_from_this());
 }
 
 void Sink::subscribe(string logger) {
@@ -77,7 +77,7 @@ void Sink::subscribe(string logger) {
 }
 
 void Sink::unsubscribe(Logger *logger) {
-    logger->deattach_sink(weak_from_this());
+    logger->remove_sink(weak_from_this());
 }
 
 void Sink::unsubscribe(string logger) {
@@ -91,13 +91,21 @@ Logger::Logger(Logger *parent, string name, bool propagate) {
 }
 
 void Logger::publish_log(Log log) {
-    std::vector<std::weak_ptr<Sink>>::iterator iter;
-    for(iter = sinks.begin(); iter != sinks.end(); ) {
-        if(auto sink_ptr = (*iter).lock()) {
+    auto filter_iter = filters.begin();
+    auto sink_iter = sinks.begin();
+
+    while(sink_iter != sinks.end()) {
+        while(filter_iter != filters.end() && filter_iter->second <= sink_iter->second) {
+            if(filter_iter->second > 0 && !filter_iter->first->filter(log)) {
+                return;
+            }
+            ++filter_iter;
+        }
+        if(auto sink_ptr = sink_iter->first.lock()) {
             sink_ptr->handle(log);
-            ++iter;
+            ++sink_iter;
         } else {
-            iter = sinks.erase(iter);
+            sink_iter = sinks.erase(sink_iter);
         }
     }
 }
@@ -107,19 +115,29 @@ inline bool equals(const std::weak_ptr<T> &t, const std::weak_ptr<U> &u) {
     return !(t.owner_before(u) || u.owner_before(t));
 }
 
-void Logger::attach_sink(std::weak_ptr<Sink> sink) {
-    sinks.push_back(sink);
+void Logger::add_sink(std::weak_ptr<Sink> sink) {
+    _add_sink(sink, 0);
+}
+
+void Logger::_add_sink(std::weak_ptr<Sink> sink, unsigned int depth) {
+    auto insert_position = std::find_if(std::begin(sinks), std::end(sinks), [depth](auto p) { return p.second == depth; });
+    sinks.insert(insert_position, std::pair(sink, depth));
     for(auto& [child_name, child] : children) {
-        child.attach_sink(sink);
+        child._add_sink(sink, depth + 1);
     }
 }
 
-void Logger::deattach_sink(std::weak_ptr<Sink> sink) {
-    sinks.erase(
-        std::remove_if(sinks.begin(), sinks.end(), [&sink](auto s) { return equals(sink, s); })
-    );
+void Logger::remove_sink(std::weak_ptr<Sink> sink) {
+    _remove_sink(sink, 0);
+}
+
+void Logger::_remove_sink(std::weak_ptr<Sink> sink, unsigned int depth) {
+    auto remove_position = std::remove_if(sinks.begin(), sinks.end(),
+                                          [&sink, depth](auto p) { return depth == p.second && equals(p.first, sink); });
+    sinks.erase(remove_position);
+
     for(auto& [child_name, child] : children) {
-        child.deattach_sink(sink);
+        child._remove_sink(sink, depth + 1);
     }
 }
 
@@ -129,18 +147,30 @@ void Logger::ensure_child(string logger_name) {
     }
 }
 
-// We override the add and remove filter methods so that it propagates to children
 void Logger::add_filter(std::shared_ptr<Filter> filter) {
-    filters.push_back(filter);
+    _add_filter(filter, 0);
+}
+
+void Logger::_add_filter(std::shared_ptr<Filter> filter, unsigned int depth) {
+    auto insert_position = std::find_if(std::begin(filters), std::end(filters), [depth](auto p) { return p.second == depth; });
+    filters.insert(insert_position, std::pair(filter, depth));
+
     for(auto& [child_name, child] : children) {
-        child.add_filter(filter);
+        child._add_filter(filter, depth + 1);
     }
 }
 
 void Logger::remove_filter(std::shared_ptr<Filter> filter) {
-    filters.erase(std::remove(filters.begin(), filters.end(), filter));
+    _remove_filter(filter, 0);
+}
+
+    void Logger::_remove_filter(std::shared_ptr<Filter> filter, unsigned int depth) {
+    auto remove_position = std::remove_if(filters.begin(), filters.end(),
+                                          [&filter, depth](auto p) { return p.second == depth, p.first == filter; });
+    filters.erase(remove_position);
+
     for(auto& [child_name, child] : children) {
-        child.remove_filter(filter);
+        child._remove_filter(filter, depth + 1);
     }
 }
 

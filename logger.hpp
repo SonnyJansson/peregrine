@@ -90,8 +90,11 @@ public:
     // Get a logger
     Logger *get(string logger_name);
 
-    void attach_sink(std::weak_ptr<Sink> sink);
-    void deattach_sink(std::weak_ptr<Sink> sink);
+    void add_sink(std::weak_ptr<Sink> sink);
+    void remove_sink(std::weak_ptr<Sink> sink);
+
+    void add_filter(std::shared_ptr<Filter>);
+    void remove_filter(std::shared_ptr<Filter>);
 
     // User commands for creating logs
     void debug(string message);
@@ -102,12 +105,23 @@ public:
 
     bool propagate;
 private:
+    // add_sink is porcelain for _attach_sink
+    void _add_sink(std::weak_ptr<Sink> sink, unsigned int depth);
+    // remove_sink is porcelain for _remove_sink
+    void _remove_sink(std::weak_ptr<Sink> sink, unsigned int depth);
+
+    void _add_filter(std::shared_ptr<Filter>, unsigned int depth);
+    void _remove_filter(std::shared_ptr<Filter>, unsigned int depth);
+
     Logger *parent;
     string name;
 
     std::map<string, Logger> children;
 
-    std::vector<std::weak_ptr<Sink>> sinks;
+    // Vector of pairs of sinks together with a number describing which (grand)parent
+    // is attached. 0: self, 1: parent, 2: grandparent, etc.
+    std::vector<std::pair<std::weak_ptr<Sink>, unsigned int>> sinks;
+    std::vector<std::pair<std::shared_ptr<Filter>, unsigned int>> filters;
 
     void publish_log(Log log);
     void ensure_child(string logger_name);
