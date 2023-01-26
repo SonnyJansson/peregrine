@@ -1,7 +1,6 @@
 #include <chrono>
 #include <iostream>
-
-#include "logger.hpp"
+#include "peregrine/logger.hpp"
 
 using namespace std::chrono;
 

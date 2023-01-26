@@ -7,7 +7,7 @@
 #include <set>
 #include <string>
 
-#include "json.hpp"
+#include <nlohmann/json.hpp>
 #include "zmq_addon.hpp"
 
 namespace logging {
