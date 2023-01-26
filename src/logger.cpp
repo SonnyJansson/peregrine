@@ -175,7 +175,7 @@ void Logger::_remove_filter(std::shared_ptr<Filter> filter, unsigned int depth) 
 }
 
 Logger *Logger::get(string logger_name) {
-    int delim_index = logger_name.find("/");
+    auto delim_index = logger_name.find("/");
 
     string head = logger_name.substr(0, delim_index);
     ensure_child(head);
