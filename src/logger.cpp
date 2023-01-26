@@ -164,9 +164,9 @@ void Logger::remove_filter(std::shared_ptr<Filter> filter) {
     _remove_filter(filter, 0);
 }
 
-    void Logger::_remove_filter(std::shared_ptr<Filter> filter, unsigned int depth) {
+void Logger::_remove_filter(std::shared_ptr<Filter> filter, unsigned int depth) {
     auto remove_position = std::remove_if(filters.begin(), filters.end(),
-                                          [&filter, depth](auto p) { return p.second == depth, p.first == filter; });
+                                          [&filter, depth](auto p) { return p.second == depth && p.first == filter; });
     filters.erase(remove_position);
 
     for(auto& [child_name, child] : children) {
