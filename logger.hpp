@@ -41,8 +41,10 @@ public:
     double time;
     LogLevel level;
     string message; 
+    string file_name;
+    unsigned int file_no;
 
-    Log(string source, double time, LogLevel level, string message);
+    Log(string source, double time, LogLevel level, string message, string file_name, unsigned int file_no);
 };
 
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Log, source, time, level, message);
@@ -96,12 +98,15 @@ public:
     void add_filter(std::shared_ptr<Filter>);
     void remove_filter(std::shared_ptr<Filter>);
 
+    // Use user-interface commands debug, info, warning, error, critical instead
+    void create_log(LogLevel level, string message, string file_name, unsigned int file_no);
+
     // User commands for creating logs
-    void debug(string message);
-    void info(string message);
-    void warning(string message);
-    void error(string message);
-    void critical(string message);
+    // void debug(string message);
+    // void info(string message);
+    // void warning(string message);
+    // void error(string message);
+    // void critical(string message);
 
     bool propagate;
 private:
@@ -123,8 +128,8 @@ private:
     std::vector<std::pair<std::weak_ptr<Sink>, unsigned int>> sinks;
     std::vector<std::pair<std::shared_ptr<Filter>, unsigned int>> filters;
 
-    void publish_log(Log log);
     void ensure_child(string logger_name);
+    void publish_log(Log log);
 };
 
 static Logger root_logger = Logger(nullptr, "");
@@ -165,5 +170,11 @@ public:
 };
 }
 }
+
+#define debug(message)    create_log(logging::LogLevel::DEBUG, message, __FILE__, __LINE__);
+#define info(message)     create_log(logging::LogLevel::INFO, message, __FILE__, __LINE__);
+#define warning(message)  create_log(logging::LogLevel::WARNING, message, __FILE__, __LINE__);
+#define error(message)    create_log(logging::LogLevel::ERROR, message, __FILE__, __LINE__);
+#define critical(message) create_log(logging::LogLevel::CRITICAL, message, __FILE__, __LINE__);
 
 #endif // __LOGGER_H__

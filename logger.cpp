@@ -41,11 +41,8 @@ string LogLevel_toStr(LogLevel level, bool with_color) {
     return name;
 }
 
-Log::Log(string source, double time, LogLevel level, string message) {
-    this->source = source;
-    this->time = time;
-    this->level = level;
-    this->message = message;
+Log::Log(string source, double time, LogLevel level, string message, string file_name, unsigned int file_no):
+    source(source), time(time), level(level), message(message), file_name(file_name), file_no(file_no) {
 }
 
 void Filterer::add_filter(std::shared_ptr<Filter> filter) {
@@ -88,6 +85,10 @@ Logger::Logger(Logger *parent, string name, bool propagate) {
     this->parent = parent; // If parent is a null pointer, it is the root logger
     this->name = name;
     this->propagate = propagate;
+}
+
+void Logger::create_log(LogLevel level, string message, string file_name, unsigned int file_no) {
+    publish_log(Log(name, time_now(), level, message, file_name, file_no));
 }
 
 void Logger::publish_log(Log log) {
@@ -191,11 +192,6 @@ Logger *Logger::get(string logger_name) {
     }
 }
 
-void Logger::debug(string message) { publish_log(Log(name, time_now(), LogLevel::DEBUG, message)); }
-void Logger::info(string message) { publish_log(Log(name, time_now(), LogLevel::INFO, message)); }
-void Logger::warning(string message) { publish_log(Log(name, time_now(), LogLevel::WARNING, message)); }
-void Logger::error(string message) { publish_log(Log(name, time_now(), LogLevel::ERROR, message)); }
-void Logger::critical(string message) { publish_log(Log(name, time_now(), LogLevel::CRITICAL, message)); }
 
 Logger *get(string logger_name) {return root_logger.get(logger_name);}
 
@@ -213,7 +209,8 @@ void PrintSink::handle(logging::Log log) {
     std::cout << std::setw(9) << std::setprecision(5) << std::fixed << log.time << " ";
     std::cout << "[" << LogLevel_toStr(log.level, with_color = this->with_color) << "] ";
     std::cout << log.message << " ";
-    std::cout << "(" << log.source.substr(1) << ")" << std::endl;
+    std::cout << "(" << log.source.substr(1) << ") ";
+    std::cout << "[" << log.file_name << ":" << log.file_no << "]" << std::endl;
 }
 
 FileSink::FileSink(string file_path) {
@@ -226,6 +223,9 @@ FileSink::~FileSink() {
 }
 
 void FileSink::handle(logging::Log log) {
+    if(!filter(log)) {
+        return;
+    }
     file_stream << std::setw(12) << std::setprecision(8) << std::fixed << log.time << " ";
     file_stream << "[" << LogLevel_toStr(log.level) << "] ";
     file_stream << log.message << " ";
