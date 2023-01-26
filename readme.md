@@ -6,7 +6,17 @@
 
 ## Building
 
+Build all
 ```
-$ ./configure.sh
-$ ./build.sh
+$ make
+```
+
+Run tests
+```
+$ make test
+```
+
+Clean build
+```
+$ make clean
 ```
