@@ -9,3 +9,4 @@ find_package(nlohmann_json)
 find_package(cppzmq)
 
 add_subdirectory(src)
+add_subdirectory(test)
