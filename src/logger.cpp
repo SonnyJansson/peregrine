@@ -123,6 +123,7 @@ void Logger::_add_sink(std::weak_ptr<Sink> sink, unsigned int depth) {
     auto insert_position = std::find_if(std::begin(sinks), std::end(sinks), [depth](auto p) { return p.second == depth; });
     sinks.insert(insert_position, std::pair(sink, depth));
     for(auto& [child_name, child] : children) {
+        (void) child_name;
         child._add_sink(sink, depth + 1);
     }
 }
@@ -137,6 +138,7 @@ void Logger::_remove_sink(std::weak_ptr<Sink> sink, unsigned int depth) {
     sinks.erase(remove_position);
 
     for(auto& [child_name, child] : children) {
+        (void) child_name;
         child._remove_sink(sink, depth + 1);
     }
 }
@@ -156,6 +158,7 @@ void Logger::_add_filter(std::shared_ptr<Filter> filter, unsigned int depth) {
     filters.insert(insert_position, std::pair(filter, depth));
 
     for(auto& [child_name, child] : children) {
+        (void) child_name;
         child._add_filter(filter, depth + 1);
     }
 }
@@ -170,6 +173,7 @@ void Logger::_remove_filter(std::shared_ptr<Filter> filter, unsigned int depth) 
     filters.erase(remove_position);
 
     for(auto& [child_name, child] : children) {
+        (void) child_name;
         child._remove_filter(filter, depth + 1);
     }
 }
