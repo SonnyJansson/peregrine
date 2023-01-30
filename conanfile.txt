@@ -1,0 +1,8 @@
+[requires]
+nlohmann_json/3.11.2
+cppzmq/4.9.0
+gtest/cci.20210126
+
+[generators]
+CMakeDeps
+CMakeToolchain

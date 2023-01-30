@@ -1,7 +1,6 @@
 #include <memory>
 #include <unistd.h>
-
-#include "logger.hpp"
+#include <peregrine/logger.hpp>
 
 using namespace logging::sinks;
 
@@ -36,6 +35,7 @@ int main() {
     usleep(200000);
 
     auto child = logging::get("main/subA/child/child/child/child/");
+    (void)child;
     // for(int i = 0; i < 100000; i++) {
     //     child->info("Test: " + std::to_string(i));
     // }

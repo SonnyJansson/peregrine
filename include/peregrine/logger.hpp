@@ -7,7 +7,7 @@
 #include <set>
 #include <string>
 
-#include "json.hpp"
+#include <nlohmann/json.hpp>
 #include "zmq_addon.hpp"
 
 namespace logging {
@@ -53,7 +53,7 @@ class Logger;
 
 class Filter {
 public:
-    virtual bool filter(Log log) {}
+    virtual bool filter(Log log) = 0;
 };
 
 class Filterer {
@@ -80,7 +80,7 @@ public:
     // Handle the case where a string is given instead of Logger object
     void unsubscribe(string logger);
 
-    virtual void handle(Log log) {  }
+    virtual void handle(Log log) = 0;
 private:
     // std::shared_ptr<Sink> access_ptr{this};
 };
