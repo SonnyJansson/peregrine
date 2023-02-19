@@ -145,7 +145,16 @@ void Logger::_remove_sink(std::weak_ptr<Sink> sink, unsigned int depth) {
 
 void Logger::ensure_child(string logger_name) {
     if(children.find(logger_name) == children.end()) {
-        children.try_emplace(logger_name, this, name + "/" + logger_name);
+        auto [child_it, success] = children.try_emplace(logger_name, this, name + "/" + logger_name);
+
+        if(not success) {
+            return;
+        }
+
+        // Propagate all the parent sinks
+        for(auto &[sink, depth] : sinks) {
+            child_it->second._add_sink(sink, depth + 1);
+        }
     }
 }
 
