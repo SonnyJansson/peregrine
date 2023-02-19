@@ -12,3 +12,17 @@ target_link_libraries(
         nlohmann_json::nlohmann_json
         cppzmq
 )
+
+add_library(
+    peregrine_wrapper STATIC
+        logger_c.cpp
+)
+target_include_directories(
+    peregrine_wrapper
+        PUBLIC ../include
+        PRIVATE .
+)
+target_link_libraries(
+    peregrine_wrapper
+        peregrine
+)
