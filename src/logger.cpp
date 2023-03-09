@@ -1,12 +1,13 @@
 #include <chrono>
 #include <iostream>
+
 #include "peregrine/logger.hpp"
 
 using namespace std::chrono;
 
 auto time_start = high_resolution_clock::now();
 
-double time_now() {
+double _time_now() {
     return duration<double>(high_resolution_clock::now() - time_start).count();
 }
 
@@ -84,10 +85,6 @@ Logger::Logger(Logger *parent, string name, bool propagate) {
     this->parent = parent; // If parent is a null pointer, it is the root logger
     this->name = name;
     this->propagate = propagate;
-}
-
-void Logger::create_log(LogLevel level, string message, string file_name, unsigned int file_no) {
-    publish_log(Log(name, time_now(), level, message, file_name, file_no));
 }
 
 void Logger::publish_log(Log log) {

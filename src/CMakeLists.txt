@@ -11,6 +11,7 @@ target_link_libraries(
     peregrine
         nlohmann_json::nlohmann_json
         cppzmq
+        fmt::fmt
 )
 
 add_library(

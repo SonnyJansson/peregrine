@@ -40,7 +40,7 @@ int main() {
     //     child->info("Test: " + std::to_string(i));
     // }
 
-    main_logger->info("Hello, this is info!");
+    main_logger->info("Hello, this is info! This is 2^8: {0}", 2^8);
     main_logger->debug("Just some cheeky debug info!");
     usleep(270000);
     subA_logger->warning("I am not doing so well!");
@@ -48,7 +48,7 @@ int main() {
     printer->remove_filter(printer_filter);
     subA_logger->error("Oops! Crashing!");
     subB_logger->info("Uh oh...");
-    main_logger->critical("Oops, also dying now! RIP!");
+    main_logger->critical("Oops, also dying now! RIP! Cause: {}", "submodule A crashed!");
 
     return 0;
 }

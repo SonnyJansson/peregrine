@@ -7,9 +7,12 @@
 #include <set>
 #include <string>
 
+#include <fmt/core.h>
+#include <fmt/format.h>
 #include <nlohmann/json.hpp>
 #include "zmq_addon.hpp"
 
+double _time_now();
 namespace logging {
 
 using namespace std;
@@ -99,7 +102,10 @@ public:
     void remove_filter(std::shared_ptr<Filter>);
 
     // Use user-interface commands debug, info, warning, error, critical instead
-    void create_log(LogLevel level, string message, string file_name, unsigned int file_no);
+    template<typename S, typename... Args>
+    void create_log(LogLevel level, string file_name, unsigned int file_no, const S& format, Args&&... args) {
+        publish_log(Log(name, _time_now(), level, fmt::format(format, args...), file_name, file_no));
+    }
 
     // User commands for creating logs
     // void debug(string message);
@@ -117,6 +123,7 @@ private:
 
     void _add_filter(std::shared_ptr<Filter>, unsigned int depth);
     void _remove_filter(std::shared_ptr<Filter>, unsigned int depth);
+
 
     Logger *parent;
     string name;
@@ -171,10 +178,20 @@ public:
 }
 }
 
-#define debug(message)    create_log(logging::LogLevel::DEBUG, message, __FILE__, __LINE__);
-#define info(message)     create_log(logging::LogLevel::INFO, message, __FILE__, __LINE__);
-#define warning(message)  create_log(logging::LogLevel::WARNING, message, __FILE__, __LINE__);
-#define error(message)    create_log(logging::LogLevel::ERROR, message, __FILE__, __LINE__);
-#define critical(message) create_log(logging::LogLevel::CRITICAL, message, __FILE__, __LINE__);
+// If using modern C++, use __VAOPT__ to remove comma if __VA_ARGS__ are empty
+// Additionally, modern C++ allows us to always compile-time check the format string using FMT_STRING
+#if _cplusplus >= 202002L
+#define debug(format, ...)    create_log(logging::LogLevel::DEBUG, __FILE__, __LINE__, FMT_STRING(format) __VA_OPT__(,) __VA_ARGS__)
+#define info(format, ...)     create_log(logging::LogLevel::INFO, __FILE__, __LINE__, FMT_STRING(format) __VA_OPT__(,) __VA_ARGS__)
+#define warning(format, ...)  create_log(logging::LogLevel::WARNING, __FILE__, __LINE__, FMT_STRING(format) __VA_OPT__(,) __VA_ARGS__)
+#define error(format, ...)    create_log(logging::LogLevel::ERROR, __FILE__, __LINE__, FMT_STRING(format) __VA_OPT__(,) __VA_ARGS__)
+#define critical(format, ...) create_log(logging::LogLevel::CRITICAL, __FILE__, __LINE__, FMT_STRING(format) __VA_OPT__(,) __VA_ARGS__)
+#else // Otherwise, use old (not as standardised) ## before __VA_ARGS__ to remove comma
+#define debug(format, ...)    create_log(logging::LogLevel::DEBUG, __FILE__, __LINE__, format, ##__VA_ARGS__)
+#define info(format, ...)     create_log(logging::LogLevel::INFO, __FILE__, __LINE__, format, ##__VA_ARGS__)
+#define warning(format, ...)  create_log(logging::LogLevel::WARNING, __FILE__, __LINE__, format, ##__VA_ARGS__)
+#define error(format, ...)    create_log(logging::LogLevel::ERROR, __FILE__, __LINE__, format, ##__VA_ARGS__)
+#define critical(format, ...) create_log(logging::LogLevel::CRITICAL, __FILE__, __LINE__, format, ##__VA_ARGS__)
+#endif
 
 #endif // __LOGGER_H__
