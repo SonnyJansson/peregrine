@@ -16,9 +16,9 @@ Logger *logger_get(Logger *parent, char *name) {
     return reinterpret_cast<struct logger *>(cpp_logger);
 }
 
-void send_log(Logger *logger, LogLevel level, char *message, char *file_name, unsigned int line_no) {
+void send_log(Logger *logger, LogLevel level, char *file_name, unsigned int line_no, char *message) {
     logging::Logger *cpp_logger = reinterpret_cast<logging::Logger *>(logger);
-    cpp_logger->create_log(logging::LogLevel(level), std::string(message), file_name, line_no);
+    cpp_logger->create_log(logging::LogLevel(level), file_name, line_no, message);
 }
 
 }

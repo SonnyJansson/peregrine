@@ -23,13 +23,13 @@ typedef enum log_level {
     CRITICAL = 5   
 } LogLevel;
 
-void send_log(Logger *logger, LogLevel level, char *message, char *file_name, unsigned int line_no);
+void send_log(Logger *logger, LogLevel level, char *file_name, unsigned int line_no, char *message);
 
-#define log_debug(logger, message)    send_log(logger, DEBUG, message, __FILE__, __LINE__);
-#define log_info(logger, message)     send_log(logger, INFO, message, __FILE__, __LINE__);
-#define log_warning(logger, message)  send_log(logger, WARNING, message, __FILE__, __LINE__);
-#define log_error(logger, message)    send_log(logger, ERROR, message, __FILE__, __LINE__);
-#define log_critical(logger, message) send_log(logger, CRITICAL, message, __FILE__, __LINE__);
+#define log_debug(logger, message)    send_log(logger, DEBUG, __FILE__, __LINE__, message)
+#define log_info(logger, message)     send_log(logger, INFO, __FILE__, __LINE__, message)
+#define log_warning(logger, message)  send_log(logger, WARNING, __FILE__, __LINE__, message)
+#define log_error(logger, message)    send_log(logger, ERROR, __FILE__, __LINE__, message)
+#define log_critical(logger, message) send_log(logger, CRITICAL, __FILE__, __LINE__, message)
 
 #ifdef __cplusplus
 }
